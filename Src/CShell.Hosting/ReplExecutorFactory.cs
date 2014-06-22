@@ -1,24 +1,21 @@
-﻿using ScriptCs;
+﻿using CShell.Framework.Services;
+using ScriptCs;
 
 namespace CShell.Hosting
 {
     public class ReplExecutorFactory : IReplExecutorFactory
     {
-        private readonly ScriptServicesBuilder builder;
-        private ScriptServices scriptServices;
+        private readonly IRepl repl;
+        private readonly ScriptServices scriptServices;
 
-        public ReplExecutorFactory(ScriptServicesBuilder builder)
+        public ReplExecutorFactory(ScriptServices scriptServices, IRepl repl)
         {
-            this.builder = builder;
+            this.scriptServices = scriptServices;
+            this.repl = repl;
         }
 
-        public IReplExecutor Create(CShell.Framework.Services.IRepl repl, string workspaceDirectory)
+        public IReplExecutor Create(string workspaceDirectory)
         {
-            if (scriptServices == null)
-            {
-                scriptServices = builder.Build(repl);
-            }
-
             scriptServices.FileSystem.CurrentDirectory = workspaceDirectory;
             scriptServices.InstallationProvider.Initialize();
 
@@ -28,9 +25,8 @@ namespace CShell.Hosting
                 scriptServices.FileSystem, 
                 scriptServices.FilePreProcessor,
                 scriptServices.Engine,
-                scriptServices.PackageInstaller,
-                scriptServices.PackageAssemblyResolver,
-                scriptServices.Logger);
+                scriptServices.Logger,
+                scriptServices.ReplCommands);
 
             var assemblies = scriptServices.AssemblyResolver.GetAssemblyPaths(scriptServices.FileSystem.CurrentDirectory);
             var scriptPacks = scriptServices.ScriptPackResolver.GetPacks();
